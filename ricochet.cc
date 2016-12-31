@@ -11,13 +11,13 @@ float rad(float deg) {
 }
 
 Line sweepLine(
-    const cv::Mat_<cv::Vec3b>& img,
+    const cv::Mat_<cv::Vec3i>& line_img,
     int min_x, int max_x,
     float min_angle, float max_angle, float angle_step,
     int bucket_width, 
     int threshold) {
-  int width = img.cols;
-  int height = img.rows;
+  int width = line_img.cols - 1;
+  int height = line_img.rows;
 
   int offset[height];
 
@@ -39,15 +39,10 @@ Line sweepLine(
         for (int y = 0; y < height; ++y) {
           int x0 = x + offset[y];
           for (int c = 0; c < 3; ++c) {
-            int left_sum = 0;
-            for (int xx = x0 - bucket_width + 1; xx <= x0; ++ xx) {
-              left_sum += img[y][xx][c];
-            }
-
-            int right_sum = 0;
-            for (int xx = x0 + 1; xx <= x0 + bucket_width; ++ xx) {
-              right_sum += img[y][xx][c];
-            }
+            int left_sum = 
+              line_img[y][x0 + 1][c] - line_img[y][x0 - bucket_width + 1][c];
+            int right_sum = 
+              line_img[y][x0 + bucket_width + 1][c] - line_img[y][x0+1][c];
 
             if (abs(((float)(right_sum - left_sum) / bucket_width)) > threshold) {
               score++;
@@ -106,16 +101,32 @@ Line findLine(const cv::Mat_<cv::Vec3d>& img,
       threshold);
 }
 
+cv::Mat_<cv::Vec3i> lineSum(const cv::Mat_<cv::Vec3b>& img) {
+  cv::Mat_<cv::Vec3i> res(img.rows, img.cols+1);
+  for (int i=0; i < img.rows; ++i) {
+    res[i][0] = cv::Vec3i(0, 0, 0);
+    for (int j=0; j < img.cols; ++j) {
+      res[i][j+1][0] = res[i][j][0] + img[i][j][0];
+      res[i][j+1][1] = res[i][j][1] + img[i][j][1];
+      res[i][j+1][2] = res[i][j][2] + img[i][j][2];
+    }
+  }
+
+  return res;
+}
+
 std::vector<cv::Vec2i> findRectangle(cv::Mat_<cv::Vec3b>& img) {
+  auto line_sum = lineSum(img);
+
   auto l = findLine(
-      img, 
+      line_sum, 
       0, kWidth / 2, 20,
       rad(0), rad(20), rad(2), rad(0.05),
       5,
       60);
 
   auto r = findLine(
-      img, 
+      line_sum, 
       kWidth / 2, kWidth, 20,
       rad(-10), rad(0), rad(2), rad(0.05),
       5,
@@ -124,16 +135,17 @@ std::vector<cv::Vec2i> findRectangle(cv::Mat_<cv::Vec3b>& img) {
   cv::Mat_<cv::Vec3b> img_t;
   cv::transpose(img, img_t);
 
+  auto line_sum_t = lineSum(img_t);
 
   auto t = findLine(
-      img_t,
+      line_sum_t,
       0, kHeight/2, 20,
       rad(-10), rad(10), rad(2), rad(0.05),
       5,
       60);
 
   auto b = findLine(
-      img_t,
+      line_sum_t,
       kHeight/2, kHeight, 20,
       rad(-10), rad(10), rad(2), rad(0.05),
       5,
