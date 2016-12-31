@@ -51,16 +51,16 @@ img_gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
 
 img_mask = cv2.inRange(img_hsv, np.array([0, 0, 0]), np.array([255, 70, 200]))
 
-x0, score =  sweep_line(img_gray, math.pi/180*6, 5, 20)
+# x0, score =  sweep_line(img_gray, math.pi/180*6, 5, 20)
 
-cv2.line(img_bgr, (x0, 0), (int(x0 - math.tan(math.pi/180*7.5) * height), height), (0, 0, 255))
+# cv2.line(img_bgr, (x0, 0), (int(x0 - math.tan(math.pi/180*7.5) * height), height), (0, 0, 255))
 
 
 kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(5,5))
 img_mask = cv2.dilate(img_mask, kernel, iterations = 3)
 cc_count, cc_labels, cc_stats, _ = cv2.connectedComponentsWithStats(img_mask) 
 
-cv2.imshow("debug", img_hsv[:, :, 2])
+cv2.imshow("debug", img_hsv)
 cv2.waitKey(-1)
 
 max_size = 0
