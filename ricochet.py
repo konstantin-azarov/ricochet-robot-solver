@@ -61,7 +61,6 @@ img_mask = cv2.dilate(img_mask, kernel, iterations = 3)
 cc_count, cc_labels, cc_stats, _ = cv2.connectedComponentsWithStats(img_mask) 
 
 cv2.imshow("debug", img_hsv)
-cv2.waitKey(-1)
 
 max_size = 0
 cc_label = 0
@@ -82,5 +81,5 @@ img_dbg = cv2.drawContours(img_bgr, [hull], -1, color=(255, 0, 0))
 edges = cv2.Canny(cv2.blur(img_gray, (3,3)), 50, 150, 3)
 
 
-cv2.imshow("debug", img_dbg)
+cv2.imshow("debug2", img_bgr)
 cv2.waitKey(-1)
